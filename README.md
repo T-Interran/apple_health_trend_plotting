@@ -30,7 +30,7 @@ This repository provides a set of R scripts to import, process, visualize, and i
 ```bash
 git clone
 ```
-**Export Apple Health Data**
+### **2.Export Apple Health Data**
 Open the Health app on your iPhone.
 
 Tap your profile picture in the top right.
@@ -43,15 +43,15 @@ Transfer the ZIP to your computer and unzip it.(airdrop, email, etc)
 
 The file named export.xml is your raw Apple Health data
 
-**3. generate excel file**
+### **3. generate excel file**
 source("apple_health_import.R")
 
-**4. generate plots (as .png files in directory)**
+### **4. generate plots (as .png files in directory)**
 source("apple_health_plots.R")
 
-**5. shiny app (requires shiny account and connection) *instructions on account creation not included***
+### **5. shiny app (requires shiny account and connection) *instructions on account creation not included***
 
-**Notes**
+#**Notes**
 All file paths are relative; keep the data files and scripts together.
 
 The apple_health_daily_summary.xlsx file is not included due to privacy.
