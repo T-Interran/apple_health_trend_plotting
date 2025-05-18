@@ -6,13 +6,13 @@ This repository provides a set of R scripts to import, process, visualize, and i
 
 ## Repository Structure
 
-- `apple_health_import.Rmd`  
+- `Load_in_apple_health.Rmd`  
   Imports and parses raw Apple Health XML export data, then creates a cleaned Excel summary (`apple_health_daily_summary.xlsx`).
 
 - `apple_health_plots.Rmd`  
   Reads the Excel summary and generates scatter plot PNG files for a variety of numeric health metrics over recent months.
 
-- `apple_health_shiny.R`  
+- `app.R`  
   A Shiny app script that visualizes the same data interactively with detailed scatter plots, trend lines, and regression stats.
 
 - `example_plot.png`  
@@ -45,15 +45,15 @@ The file named export.xml is your raw Apple Health data
 
 ### **3. generate excel file**
 ```bash
-source("apple_health_import.Rmd")
+source("Load_in_apple_health.Rmd")
 ```
-### **4. generate plots (as .png files in directory)**
+### **4. generate plots (as .png files in directory)** (if you only want shiny app skip and go to 5.)
 ```bash
-source("apple_health_plots.Rmd")
+source("apple_health_plot.Rmd")
 ```
-### **5. shiny app (requires shiny account and connection) *instructions on account creation not included***
+### **5. shiny app (requires shiny account and connection) *instructions on account creation not included*** (if you don't want shinyapp skip this). 
 ```bash
-source("apple_health_shiny.Rmd")
+source("app.R")
 ```
 #**Notes**
 All file paths are relative; keep the data files and scripts together.
