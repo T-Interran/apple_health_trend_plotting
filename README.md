@@ -28,7 +28,7 @@ This repository provides a set of R scripts to import, process, visualize, and i
 ### 1. Clone this Repository
 
 ```bash
-git clone
+git clone https://github.com/T-Interran/apple_health_trend_plotting.git
 ```
 ### **2.Export Apple Health Data**
 Open the Health app on your iPhone.
