@@ -1,0 +1,122 @@
+---
+title: "load_in_apple_health_data"
+output: html_document
+date: "2025-05-18"
+---
+
+```{r}
+# Apple Health XML Parser and Daily Summary Creator
+# This script parses Apple Health XML exports into daily summaries
+# Designed for public sharing: no hardcoded paths or personal info
+
+# --- Load Required Libraries ---
+library(xml2)       # For reading and parsing XML files
+library(dplyr)      # For data manipulation
+library(lubridate)  # For handling and parsing dates
+library(tidyr)      # For reshaping data
+library(purrr)      # For functional mapping
+library(openxlsx)   # For writing Excel files
+
+# --- Set Input and Output Paths ---
+# Assumes this script is run from the directory containing the "export.xml" file
+input_path  <- "export.xml"
+output_dir  <- "outputs"
+output_file <- file.path(output_dir, "apple_health_daily_summary.xlsx")
+
+# Create output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+# --- Load Apple Health XML File ---
+# The export.xml file is usually found inside the Apple Health export ZIP file
+doc <- read_xml(input_path)
+
+# --- Extract All <Record> Elements ---
+# These nodes hold most of the health data
+records <- xml_find_all(doc, ".//Record")
+
+# --- Convert Each Record Node to a Row in a Data Frame ---
+# Extract type, value, unit, and start date
+df <- map_df(records, function(x) {
+  data.frame(
+    type      = xml_attr(x, "type"),
+    value     = xml_attr(x, "value"),
+    unit      = xml_attr(x, "unit"),
+    startDate = xml_attr(x, "startDate"),
+    stringsAsFactors = FALSE
+  )
+})
+
+# --- Clean and Convert Date and Numeric Values ---
+df <- df %>%
+  mutate(
+    date  = as.Date(startDate),
+    value = as.numeric(value)
+  )
+
+# --- Define Aggregation Function for Daily Totals ---
+# Groups a given metric by day and returns daily summaries
+aggregate_metric <- function(df, metric_type, new_name) {
+  df %>%
+    filter(type == metric_type) %>%
+    group_by(date) %>%
+    summarise(!!new_name := sum(value, na.rm = TRUE), .groups = "drop")
+}
+
+# --- Extract and Aggregate Each Health Metric of Interest ---
+df_active_energy <- aggregate_metric(df, "HKQuantityTypeIdentifierActiveEnergyBurned", "ActiveEnergy")
+df_basal_energy  <- aggregate_metric(df, "HKQuantityTypeIdentifierBasalEnergyBurned", "BasalEnergy")
+df_exercise      <- aggregate_metric(df, "HKQuantityTypeIdentifierAppleExerciseTime", "ExerciseMinutes")
+df_steps         <- aggregate_metric(df, "HKQuantityTypeIdentifierStepCount", "Steps")
+df_flights       <- aggregate_metric(df, "HKQuantityTypeIdentifierFlightsClimbed", "FlightsClimbed")
+df_distance      <- aggregate_metric(df, "HKQuantityTypeIdentifierDistanceWalkingRunning", "WalkRunDistance")
+df_cycling       <- aggregate_metric(df, "HKQuantityTypeIdentifierDistanceCycling", "BikeDistance")
+
+# --- Handle Stand Hours Separately: Count of Unique Hours Standing Per Day ---
+df_stand <- df %>%
+  filter(type == "HKCategoryTypeIdentifierAppleStandHour") %>%
+  group_by(date) %>%
+  summarise(StandHours = n(), .groups = "drop")
+
+# --- Combine All Metrics into One Daily Summary ---
+df_daily <- reduce(
+  list(
+    df_active_energy, df_basal_energy, df_exercise,
+    df_steps, df_flights, df_distance,
+    df_cycling, df_stand
+  ),
+  full_join,
+  by = "date"
+) %>%
+  arrange(date)
+
+# --- Add Manual Metrics Placeholder Columns for Users to Fill In ---
+# These columns are useful for metrics from scales or other sources
+manual_columns <- c(
+  "weight_lbs", "BMI", "Subcutaneous_fat_pct", "Visceral_fat", 
+  "Skeletal_muscle_lbs", "Metabolic_age", "Body_fat_lbs", 
+  "Fat_free_mass_lbs", "Body_water_lbs", "Muscle_mass_lbs", 
+  "Bone_mass_lbs", "Protein_lbs", "BMR_kcal"
+)
+
+# Initialize manual columns with NA (numeric)
+df_daily[manual_columns] <- NA_real_
+
+# --- Round Apple Watch Metrics for Readability ---
+df_daily <- df_daily %>%
+  mutate(
+    ActiveEnergy    = round(ActiveEnergy, 0),
+    BasalEnergy     = round(BasalEnergy, 0),
+    ExerciseMinutes = round(ExerciseMinutes, 0),
+    Steps           = round(Steps, 0),
+    FlightsClimbed  = round(FlightsClimbed, 0),
+    WalkRunDistance = round(WalkRunDistance, 2),
+    BikeDistance    = round(BikeDistance, 2)
+  )
+
+# --- Save Output as an Excel File ---
+write.xlsx(df_daily, output_file, overwrite = TRUE)
+
+```
+
