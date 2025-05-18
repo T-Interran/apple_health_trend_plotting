@@ -44,13 +44,17 @@ Transfer the ZIP to your computer and unzip it.(airdrop, email, etc)
 The file named export.xml is your raw Apple Health data
 
 ### **3. generate excel file**
-source("apple_health_import.R")
-
+```bash
+source("apple_health_import.Rmd")
+```
 ### **4. generate plots (as .png files in directory)**
-source("apple_health_plots.R")
-
+```bash
+source("apple_health_plots.Rmd")
+```
 ### **5. shiny app (requires shiny account and connection) *instructions on account creation not included***
-
+```bash
+source("apple_health_shiny.Rmd")
+```
 #**Notes**
 All file paths are relative; keep the data files and scripts together.
 
